@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <gazebo reference="caster_wheel_link">
+        <mu1 value="0.1" />
+        <mu2 value="0.1" />
+    </gazebo>
+
+    <!--diff_drive_controller 接收 cmd_vel 主题上发布的 geometry_msgs/扭转消息，计算里程计信息，并发布关于里程主题的 nav_msgs/里程传感器消息-->
+    <gazebo>
+        <plugin 
+            filename="gz-sim-diff-drive-system" 
+            name="gz::sim::systems::DiffDrive">
+            <left_joint>base_left_wheel_joint</left_joint>
+            <right_joint>base_right_wheel_joint</right_joint>
+            <wheel_separation>0.45</wheel_separation>
+            <wheel_radius>0.1</wheel_radius>
+            <max_linear_acceleration>0.1</max_linear_acceleration>
+            <topic>cmd_vel</topic>
+            <odom_topic>/demo/odom</odom_topic>
+            <tf_topic>/model/my_robot/tf</tf_topic>
+            <!--将车轮编码器信息转换为里程计信息-->
+            <frame_id>odom</frame_id>
+            <child_frame_id>base_footprint</child_frame_id>
+        </plugin>
+    </gazebo>
+
+    <gazebo>
+        <plugin 
+            filename="gz-sim-joint-state-publisher-system" 
+            name="gz::sim::systems::JointStatePublisher">
+            <joint_name>base_left_wheel_joint</joint_name>
+            <joint_name>base_right_wheel_joint</joint_name>
+        </plugin>
+    </gazebo>
+
+    <gazebo>
+        <plugin filename="gz-sim-imu-system"
+        name="gz::sim::systems::Imu">
+        </plugin>
+    </gazebo>
+
+
+
+</robot>

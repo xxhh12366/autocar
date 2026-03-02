@@ -1,0 +1,212 @@
+<?xml version="1.0"?>
+<robot name="sensor_robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- ===================== IMU传感器（封装为宏，可传参） ===================== -->
+  <xacro:macro name="imu_sensor" params="parent_link:=base_link xyz:='0.0 0.0 0.01' rpy:='0 0 0'">
+    <!-- 1. IMU关节（修正URDF语法：pose → origin） -->
+    <joint name='imu_joint' type='fixed'>
+      <parent link="${parent_link}"/>
+      <child link="imu_link"/>
+      <origin xyz="${xyz}" rpy="${rpy}" />
+    </joint>
+
+    <!-- 2. IMU Link -->
+    <link name='imu_link'>
+      <visual name="imu_link_visual">
+        <geometry>
+          <box size="0.1 0.1 0.1"/>
+        </geometry>
+        <!-- 补充材质（若common_properties中有定义可直接引用） -->
+        <material name="grey" />
+      </visual>
+
+      <collision name="imu_link_collision">
+        <geometry>
+          <box size="0.1 0.1 0.1"/>
+        </geometry>
+      </collision>
+
+      <!-- 惯性参数（复用原有宏） -->
+      <xacro:box_inertia m="0.1" x="0.1" y="0.1" z="0.1" o_xyz="0 0 0" o_rpy="0 0 0"/>
+    </link>
+
+    <!-- 3. Gazebo IMU传感器配置（核心：SDF标签嵌套在gazebo标签内） -->
+    <gazebo reference="imu_link">
+      <sensor name="imu_sensor" type="imu">
+        <always_on>true</always_on>
+        <update_rate>100</update_rate>
+        <visualize>true</visualize>
+        <topic>imu</topic>
+        <imu>
+          <angular_velocity>
+            <x>
+              <noise type="gaussian">
+                <mean>0.0</mean>
+                <stddev>2e-4</stddev>
+                <bias_mean>0.0000075</bias_mean>
+                <bias_stddev>0.0000008</bias_stddev>
+              </noise>
+            </x>
+            <y>
+              <noise type="gaussian">
+                <mean>0.0</mean>
+                <stddev>2e-4</stddev>
+                <bias_mean>0.0000075</bias_mean>
+                <bias_stddev>0.0000008</bias_stddev>
+              </noise>
+            </y>
+            <z>
+              <noise type="gaussian">
+                <mean>0.0</mean>
+                <stddev>2e-4</stddev>
+                <bias_mean>0.0000075</bias_mean>
+                <bias_stddev>0.0000008</bias_stddev>
+              </noise>
+            </z>
+          </angular_velocity>
+          <linear_acceleration>
+            <x>
+              <noise type="gaussian">
+                <mean>0.0</mean>
+                <stddev>1.7e-2</stddev>
+                <bias_mean>0.1</bias_mean>
+                <bias_stddev>0.001</bias_stddev>
+              </noise>
+            </x>
+            <y>
+              <noise type="gaussian">
+                <mean>0.0</mean>
+                <stddev>1.7e-2</stddev>
+                <bias_mean>0.1</bias_mean>
+                <bias_stddev>0.001</bias_stddev>
+              </noise>
+            </y>
+            <z>
+              <noise type="gaussian">
+                <mean>0.0</mean>
+                <stddev>1.7e-2</stddev>
+                <bias_mean>0.1</bias_mean>
+                <bias_stddev>0.001</bias_stddev>
+              </noise>
+            </z>
+          </linear_acceleration>
+        </imu>
+      </sensor>
+    </gazebo>
+  </xacro:macro>
+
+  <!-- ===================== 激光雷达传感器（封装为宏） ===================== -->
+  <xacro:macro name="lidar_sensor" params="parent_link:=base_link xyz:='0.0 0.0 0.12' rpy:='0 0 0'">
+    <!-- 1. 雷达关节 -->
+    <joint name="lidar_joint" type="fixed">
+      <parent link="${parent_link}"/>
+      <child link="lidar_link"/>
+      <origin xyz="${xyz}" rpy="${rpy}" />
+    </joint>
+
+    <!-- 2. 雷达Link -->
+    <link name='lidar_link'>
+      <visual name="lidar_link_visual">
+        <geometry>
+          <cylinder radius="0.0508" length="0.055"/>
+        </geometry>
+        <material name="blue" />
+      </visual>
+
+      <collision name="lidar_link_collision">
+        <geometry>
+          <cylinder radius="0.0508" length="0.055"/>
+        </geometry>
+      </collision>
+
+      <!-- 惯性参数 -->
+      <xacro:cylinder_inertia m="0.125" r="0.0508" l="0.055" o_xyz="0 0 0" o_rpy="0 0 0"/>
+    </link>
+
+    <!-- 3. Gazebo雷达传感器配置 -->
+    <gazebo reference="lidar_link">
+      <sensor name="lidar" type="gpu_lidar">
+        <always_on>true</always_on>
+        <visualize>true</visualize>
+        <update_rate>5</update_rate>
+        <topic>lidar</topic>
+        <lidar>
+          <scan>
+            <horizontal>
+              <samples>360</samples>
+              <resolution>1.000000</resolution>
+              <min_angle>0.000000</min_angle>
+              <max_angle>6.280000</max_angle>
+            </horizontal>
+          </scan>
+          <range>
+            <min>0.120000</min>
+            <max>3.5</max>
+            <resolution>0.015000</resolution>
+          </range>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.01</stddev>
+          </noise>
+        </lidar>
+      </sensor>
+    </gazebo>
+  </xacro:macro>
+
+  <!-- ===================== 深度相机传感器（封装为宏） ===================== -->
+  <xacro:macro name="depth_camera_sensor" params="parent_link:=base_link xyz:='0.215 0 0.05' rpy:='0 0 0'">
+    <!-- 1. 相机关节 -->
+    <joint name="camera_joint" type="fixed">
+      <parent link="${parent_link}"/>
+      <child link="camera_link"/>
+      <origin xyz="${xyz}" rpy="${rpy}" />
+    </joint>
+
+    <!-- 2. 相机Link -->
+    <link name='camera_link'>
+      <visual name="camera_link_visual">
+        <geometry>
+          <box size="0.015 0.130 0.0222"/>
+        </geometry>
+        <material name="grey" />
+      </visual>
+
+      <collision name="camera_link_collision">
+        <geometry>
+          <box size="0.015 0.130 0.0222"/>
+        </geometry>
+      </collision>
+
+      <!-- 惯性参数 -->
+      <xacro:box_inertia m="0.035" x="0.015" y="0.130" z="0.0222" o_xyz="0 0 0" o_rpy="0 0 0"/>
+    </link>
+
+    <!-- 3. Gazebo深度相机配置 -->
+    <gazebo reference="camera_link">
+      <sensor name="depth_camera" type="rgbd_camera">
+        <always_on>true</always_on>
+        <visualize>true</visualize>
+        <update_rate>5.0</update_rate>
+        <topic>depth_camera</topic>
+        <camera>
+          <horizontal_fov>1.047198</horizontal_fov>
+          <image>
+            <width>640</width>
+            <height>480</height>
+          </image>
+          <clip>
+            <near>0.05</near>
+            <far>3</far>
+          </clip>
+        </camera>
+      </sensor>
+    </gazebo>
+  </xacro:macro>
+
+  <!-- ===================== 调用传感器宏（实例化） ===================== -->
+  <xacro:imu_sensor xyz="0.0 0.0 0.21" rpy="0 0 0"/>
+  <xacro:lidar_sensor xyz="0.0 0.0 0.26" rpy="0 0 0"/>
+  <xacro:depth_camera_sensor xyz="0.32 0.0 0.22" rpy="0 0 0"/>
+
+</robot>
